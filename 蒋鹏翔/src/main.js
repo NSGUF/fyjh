@@ -3,7 +3,7 @@ import App from './App.vue'
 
 
 import Table from '@/components/Table.vue'
-import TableColumn from '@/components/Table_column.vue'
+import TableColumn from '@/components/TableColumn.vue'
 import Pagination from '@/components/Pagination'
 
 Vue.config.productionTip = false

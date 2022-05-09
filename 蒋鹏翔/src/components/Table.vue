@@ -36,6 +36,12 @@ export default {
             type: Number,
             default: 2,
         },
+
+        // 是否显示勾选列
+        showCheck: {
+            type: Boolean,
+            default: false,
+        },
     },
     data: () => {
         return {
@@ -46,6 +52,9 @@ export default {
 
             // 0无序，1降序 2升序
             sort: 0,
+
+            // 勾选的数据列表
+            selectData: [],
         };
     },
 
@@ -63,6 +72,9 @@ export default {
             this.cellData.push(item.componentOptions.propsData.dataIndex);
         });
         this.tableDataFn();
+
+        // 勾选触发事件
+        this.$emit("selectChange", this.selectData);
     },
 
     methods: {
@@ -90,6 +102,18 @@ export default {
                 }
             });
         },
+
+        // 获取所有选中的数据 组件方法
+        getSelectData() {},
+
+        // 刷新表格数据
+        loadData() {},
+
+        // 勾选所有行
+        setCheckAll() {},
+
+        // 禁用所有行
+        disabledAllData() {},
     },
 
     computed: {
