@@ -12,5 +12,5 @@
 ## 启动项目 
 `npm run dev`
 
-## demo：
+## demo
 ![image](./src/assets/demo.jpg)
