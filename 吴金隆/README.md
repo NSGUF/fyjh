@@ -13,5 +13,5 @@
 `npm run dev`
 
 ## demo
-![image](./src/assets/demo.jpg)
+![image](./src/assets/demo.jpg)  
 截图路径：./src/assets/demo.jpg
