@@ -13,4 +13,4 @@
 `npm run dev`
 
 ## demo
-![image](./src/assets/demo.jpg)
+![image](/src/assets/demo.jpg)
