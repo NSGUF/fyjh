@@ -93,7 +93,7 @@ export default defineComponent({
             default: ()=>{}
         }
     },
-    emits: ['handlerTrClick', 'changePage', 'handlerSort'],
+    emits: ['handlerTrClick', 'changePage', 'handlerSort', 'getCheckboxValue'],
     setup(props, { emit, expose }) {
         const tbody = ref(null)
         const state = reactive({
