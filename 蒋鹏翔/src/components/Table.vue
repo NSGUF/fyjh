@@ -9,20 +9,24 @@
 
         <!-- 内容 -->
         <tbody>
-            <tr v-for="(item, index) in newData" :key="'tableColumn' + index">
+            <tr
+                v-for="(item, index) in newData.data"
+                :key="'tableColumn' + index"
+            >
                 <td
                     v-for="(cellItem, cellIndex) in cellData"
                     :key="'tableCell' + cellIndex"
                 >
-                    {{ item[cellItem] }}
+                    {{ cellItem === "type" ? index : item[cellItem] }}
                 </td>
             </tr>
         </tbody>
-        <button @click="sortSet">{{ sortText }}</button>
     </table>
 </template>
 
 <script>
+import { ref, reactive, onMounted, watch, computed } from "vue";
+
 export default {
     name: "JTableContent",
 
@@ -43,87 +47,77 @@ export default {
             default: false,
         },
     },
-    data: () => {
-        return {
-            cellData: [],
+    setup(props, { slots, emit }) {
+        const cellData = reactive([]);
 
-            //用于存放分页拆分后的数据
-            newData: [],
-
-            // 0无序，1降序 2升序
-            sort: 0,
-
-            // 勾选的数据列表
-            selectData: [],
-        };
-    },
-
-    watch: {
-        options: {
-            deep: true,
-            handler() {
-                this.tableDataFn();
-            },
-        },
-    },
-
-    mounted() {
-        this.$slots.default.forEach((item) => {
-            this.cellData.push(item.componentOptions.propsData.dataIndex);
+        //用于存放分页拆分后的数据
+        const newData = reactive({
+            data: [],
         });
-        this.tableDataFn();
 
-        // 勾选触发事件
-        this.$emit("selectChange", this.selectData);
-    },
+        // 0无序，1降序 2升序
+        const sort = ref(0);
 
-    methods: {
-        // 进行分页
-        tableDataFn() {
-            let { data, pageSize, pageNum } = this.options;
-            let start = (pageNum - 1) * pageSize;
-            let end = pageNum * pageSize;
-            this.newData = data.slice(start, end);
-        },
+        // 勾选的数据列表
+        const selectData = reactive([]);
 
-        sortSet() {
-            this.sort++;
-            if (this.sort > 2) {
-                this.tableDataFn();
-                this.sort = 0;
-                return;
-            }
-            this.newData.sort((a, b) => {
-                if (this.sort === 1) {
-                    return a.jAge - b.jAge;
-                }
-                if (this.sort === 2) {
-                    return b.jAge - a.jAge;
+        watch(props.options, () => {
+            tableDataFn();
+        });
+
+        onMounted(() => {
+            // 获取slot中的dataIndex
+            slots.default().forEach((item) => {
+                if (item.props) {
+                    cellData.push(item.props?.dataIndex);
                 }
             });
-        },
+
+            // 勾选触发事件
+            emit("selectChange", selectData);
+
+            tableDataFn();
+        });
+
+        // 进行分页
+        const tableDataFn = () => {
+            let { data, pageSize, pageNum } = props.options;
+            let start = (pageNum - 1) * pageSize;
+            let end = pageNum * pageSize;
+            newData.data = data.slice(start, end);
+        };
 
         // 获取所有选中的数据 组件方法
-        getSelectData() {},
+        const getSelectData = () => {};
 
         // 刷新表格数据
-        loadData() {},
+        const loadData = () => {};
 
         // 勾选所有行
-        setCheckAll() {},
+        const setCheckAll = () => {};
 
         // 禁用所有行
-        disabledAllData() {},
-    },
+        const disabledAllData = () => {};
 
-    computed: {
-        sortText() {
-            return this.sort === 1
+        const sortText = computed(() => {
+            return sort.value === 1
                 ? "年龄降序"
-                : this.sort === 2
+                : sort.value === 2
                 ? "年龄无序"
                 : "年龄升序";
-        },
+        });
+
+        return {
+            cellData,
+            newData,
+            sort,
+            selectData,
+            getSelectData,
+            loadData,
+            setCheckAll,
+            disabledAllData,
+            sortText,
+        };
     },
 };
 </script>
