@@ -71,6 +71,7 @@ export default defineComponent({
     justify-content: center;
     width: 20px;
     height: 20px;
+    line-height: 21px;
     border: solid 1px #eee;
     margin-left: 10px;
 }
@@ -79,6 +80,7 @@ export default defineComponent({
 .pagination-box-size,
 .pagination-box-left {
     cursor: pointer;
+    font-style: normal;
 }
 .page-hover:hover {
     color: rgb(53, 139, 219);
