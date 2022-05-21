@@ -4,7 +4,7 @@
             <table class="table-box" border="0" cellspacing="0" cellpadding="0">
                 <!-- 表头 -->
                 <div class="thead-box" :class="{'shift-right': isScroll}">
-                    <thead-index v-bind="$attrs" @changeboxAll="changeAll">
+                    <thead-index v-bind="$attrs" :isCheckAll="isCheckAll" @changeboxAll="changeAll">
                         <template v-for="(index, name) in $slots" v-slot:[name]="slotData">
                             <slot :name="name" 
                                   :trData="slotData.trData" 
@@ -14,7 +14,7 @@
                     </thead-index>
                 </div>
                 <!-- 表体 -->
-                <div class="tbody-box" :style="{ height: maxHeight}" @scroll="onScroll">
+                <div class="tbody-box" :style="{ height: setHeight}" @scroll="onScroll">
                     <tbody-index v-bind="$attrs"
                                  ref="tbody" 
                                  :checkValue="checkValue"
@@ -36,7 +36,7 @@
     </div>
 </template>
 <script>
-import { defineComponent, onMounted, reactive, ref, watch, nextTick, toRefs } from 'vue'
+import { defineComponent, reactive, ref, watch, toRefs, computed, nextTick } from 'vue'
 import pageInation from './pageination.vue'
 import theadIndex from './theadIndex.vue'
 import tbodyIndex from './tbodyIndex.vue'
@@ -50,8 +50,8 @@ export default defineComponent({
     props: {
         // 最大高度
         maxHeight: {
-            type: String,
-            default: 'auto'
+            type: Number,
+            default: 0
         },
         // 支持分页
         isPagination: {
@@ -79,29 +79,29 @@ export default defineComponent({
             topVal: '0px',
             isScroll: false,
             tableWidth: 'auto',
-            isHeadScroll: false
-        })
-
-        onMounted(() => {
+            isHeadScroll: false,
+            theadHeight: 0,
         })
 
         watch(()=>props.tbodyData, () => {
             state.tbodyList = props.tbodyData;
-            nextTick(() => {
-                setWidth()
-            })
         },{immediate: true})
 
-        const setWidth = () => {
-            let height = tbody.value.$el.offsetHeight
-            let width = tbody.value.$el.offsetWidth
-            state.tableWidth = width + 'px'
-            if (height > parseFloat(props.maxHeight)) {
-                state.isScroll = true
-                state.tableWidth = tbody.value.offsetWidth + 18 + 'px'
-            }
-        }
+        const setHeight = computed(()=>{
+            nextTick(()=>{
+                state.theadHeight = document.querySelector('.thead-box').offsetHeight;
+                let height = tbody.value.$el.offsetHeight;
+                height > parseFloat(props.maxHeight) && (state.isScroll = true);
+            })
+            let bodyHeight = props.maxHeight? props.maxHeight - state.theadHeight + 'px' : 'auto';
+            console.log('计算body的高度', bodyHeight);
+            return bodyHeight
+        })
 
+        const isCheckAll = computed(()=>{
+            console.log('计算是否全选', state.checkValue.length);
+            return state.tbodyList.length === state.checkValue.length;
+        })
 
         const onScroll = e => {
             let top = e.target.scrollTop
@@ -127,10 +127,12 @@ export default defineComponent({
         const sortClick = (e, field) => {
             let sort = e.target.getAttribute('data-name')
             state.theadSort[field] = sort
+            console.log('当前排序的状态', field, sort);
             emit('handlerSort', { field, sort })
         }
 
         const pageUp = (pageObj)=>{
+            console.log('当前跳转的页码', pageObj);
             emit('changePage', pageObj)
         }
 
@@ -139,6 +141,7 @@ export default defineComponent({
         }
 
         const setSelectValue = (item) =>{
+            console.log('当前选择的数据', item);
             item.type === 'multiple'? state.radioValue = item.value : state.checkValue = item.value;
         }
 
@@ -154,7 +157,9 @@ export default defineComponent({
             trClick,
             sortClick,
             pageUp,
-            setSelectValue
+            setSelectValue,
+            setHeight,
+            isCheckAll
         }
     }
 })

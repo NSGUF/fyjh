@@ -31,7 +31,7 @@
     </thead>
 </template>
 <script>
-import { defineComponent, onMounted, reactive, toRefs } from 'vue'
+import { defineComponent, onMounted, reactive, toRefs, watch } from 'vue'
 export default defineComponent({
     name: 'theadIndex',
     props: {
@@ -54,6 +54,10 @@ export default defineComponent({
         theadSort: {
             type: Object,
             default: () => {}
+        },
+        isCheckAll: {
+            type: Boolean,
+            default: false
         }
     },
     emits: ['changeboxAll'],
@@ -68,6 +72,10 @@ export default defineComponent({
             props.theadData.forEach(item => {
                 item.sort && (state.theadSort[item.field] = 'top')
             })
+        })
+
+        watch(()=>props.isCheckAll,()=>{
+            state.checkboxAll = props.isCheckAll;
         })
 
         const changeAll = () => {

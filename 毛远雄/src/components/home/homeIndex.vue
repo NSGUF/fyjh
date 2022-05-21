@@ -4,7 +4,7 @@
             ref="tableItem"
             :theadData="theadData" 
             :tbodyData="tbodyData" 
-            maxHeight="150px" 
+            :maxHeight="200" 
             :selection="true" 
             :isPagination="true" 
             :total="100" 
