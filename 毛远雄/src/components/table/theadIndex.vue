@@ -25,9 +25,19 @@
                         <i data-name="top" :class="{ 'sort-active': theadSort[item.field] === 'top' }">↑</i>
                         <i data-name="btn" :class="{ 'sort-active': theadSort[item.field] === 'btn' }">↓</i>
                     </span>
+                    <span class="thead-filter" v-if="isShowFilter(item.field)" @click.stop="filterClick($event, item.field)">
+                        <i>♜</i>
+                    </span>
                 </template>
             </th>
         </tr>
+        <div class="filter-box" 
+             v-show="filterShow" 
+             :style="{'top': filterTop, 'left': filterLeft}"
+             @click.stop>
+            <input v-model="searchVal" />
+            <p class="filter-botton"><button @click="searchClick">search</button><button @click="searchVal=''">reset</button></p>
+        </div>
     </thead>
 </template>
 <script>
@@ -58,25 +68,41 @@ export default defineComponent({
         isCheckAll: {
             type: Boolean,
             default: false
+        },
+        search: {
+           type: Array,
+           default: () => [] 
         }
     },
-    emits: ['changeboxAll'],
+    emits: ['changeboxAll', 'searchChange'],
     setup(props, {emit}){
 
         const state = reactive({
             checkboxAll: false,
-            theadSort: {}
+            theadSort: {},
+            searchVal: '',
+            filterTop: '',
+            filterLeft: '',
+            filterShow: false,
+            searchField: ''
         })
 
         onMounted(()=>{
             props.theadData.forEach(item => {
                 item.sort && (state.theadSort[item.field] = 'top')
             })
+            document.addEventListener('click',()=>{
+                state.filterShow = false;
+            })
         })
 
         watch(()=>props.isCheckAll,()=>{
             state.checkboxAll = props.isCheckAll;
         })
+
+        const isShowFilter = (field) => {
+            return props.search.includes(field);
+        }
 
         const changeAll = () => {
             emit('changeboxAll', state.checkboxAll);
@@ -89,12 +115,74 @@ export default defineComponent({
             return styles
         }
 
+        const filterClick = (e, field)=>{
+            state.filterTop = e.y + 12 + 'px';
+            state.filterLeft = e.x - 220 + 'px';
+            state.filterShow = true;
+            state.searchField = field;
+        }
+
+        const searchClick = ()=>{
+            emit('searchChange', {field: state.searchField, value: state.searchVal})
+        }
+
         return {
             ...toRefs(state),
             changeAll,
-            setStyle
+            setStyle,
+            isShowFilter,
+            filterClick,
+            searchClick
         }
     }
 })
 </script>
-<style scoped></style>
+<style scoped>
+.thead-tr_th{
+    position: relative;
+}
+.thead-filter{
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: translate(-6px, 13%);
+    cursor: pointer;
+}
+.thead-filter>i{
+    font-style: normal;
+    display: inline-block;
+    font-size: 13px;
+    transform: rotate(180deg);
+}
+.filter-box{
+    width: 200px;
+    position: fixed;
+    left: -100px;
+    top: -100px;
+    text-align: left;
+    background-color: #fff;
+    padding: 15px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.07), 
+                0 2px 4px rgba(0,0,0,0.07), 
+                0 4px 8px rgba(0,0,0,0.07), 
+                0 8px 16px rgba(0,0,0,0.07),
+                0 16px 32px rgba(0,0,0,0.07), 
+                0 32px 64px rgba(0,0,0,0.07);
+    border-radius: 3px;
+}
+.filter-box>input{
+    width: 190px;
+}
+.filter-botton{
+    margin-top: 10px;
+    margin-bottom: 0px;
+    display: flex;
+    justify-content: flex-start;
+}
+.filter-botton>button{
+    cursor: pointer;
+}
+.filter-botton>button:nth-of-type(1){
+    margin-right: 15px;
+}
+</style>

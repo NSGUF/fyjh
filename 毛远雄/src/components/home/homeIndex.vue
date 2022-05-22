@@ -13,9 +13,9 @@
             @changePage="changePage"
             @handlerSort="handlerSort"
             @handlerTrClick="handlerTrClick">
-            <template #thead-name="{ value }">
+            <!-- <template #thead-name="{ value }">
                 <span>{{ value }}√</span>
-            </template>
+            </template> -->
             
             <template #sex="{ trData }">
                 <span>
@@ -43,7 +43,7 @@ export default defineComponent({
             a: 1,
             theadData: [],
             tbodyData: [],
-            searchObj: {}
+            searchObj: ['name']
         })
         onMounted(() => {
             state.theadData = [
