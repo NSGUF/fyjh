@@ -103,8 +103,6 @@ export default {
             return { start, end };
         });
 
-        console.log(startEnd.value)
-
         // 输入跳转校验
         const inputPage = () => {
             let num = val.value;
