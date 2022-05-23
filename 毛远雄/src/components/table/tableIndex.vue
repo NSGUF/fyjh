@@ -1,182 +1,123 @@
 <template>
-    <div>
-        <div class="table" :class="{ 'table-isscroll': isScroll }" :style="{ height: maxHeight, width: tableWidth }" @scroll="onScroll">
-            <table class="table-box" border="0" cellspacing="0" cellpadding="0">
-                <!-- 表头 -->
-                <thead class="table-header-thead" :class="{ 'table-isscroll': isHeadScroll }" :style="{ top: topVal }">
-                    <tr class="table-header-thead_tr">
-                        <th class="thead-tr_checkbox" v-if="selection">
-                            <input type="checkbox" name="checkAll" v-model="checkboxAll" @change="changeAll" />
-                        </th>
-                        <th class="thead-tr_checkbox" v-if="multiple"></th>
-                        <th class="thead-tr_th" v-for="(item, thIndex) in theadData" :key="item.field + thIndex" :style="setStyle(item)">
-                            <template v-if="$slots['thead-' + item.field]">
-                                <slot :name="'thead-' + item.field" :trData="item" :value="item.name" :thIndex="thIndex"></slot>
-                            </template>
-                            <template v-else>
-                                {{ item.name }}
-                                <span class="thead-sort" v-if="item.sort" @click="sortClick($event, item.field)">
-                                    <i data-name="top" :class="{ 'sort-active': theadSort[item.field] === 'top' }">↑</i>
-                                    <i data-name="btn" :class="{ 'sort-active': theadSort[item.field] === 'btn' }">↓</i>
-                                </span>
-                            </template>
-                        </th>
-                    </tr>
-                </thead>
-                <!-- 表体 -->
-                <tbody class="table-body-tbody" ref="tbody">
-                    <tr class="table-body-tbody_tr" v-for="(item, trIndex) in tbodyData" :key="item.id" @click="trClick(item)">
-                        <td class="tbody-tr_checkbox" v-if="selection">
-                            <input type="checkbox" name="checkAll" v-model="checkModel" :value="item.id" />
-                        </td>
-                        <td class="tbody-tr_checkbox" v-if="multiple">
-                            <input type="radio" name="radio" v-model="radioModel" :value="item.id" />
-                        </td>
-                        <td class="tbody-tr_td" v-for="(el, tdIndex) in theadData" :key="el.field + item.id" :style="setStyle(el)">
-                            <template v-if="$slots[el.field]">
-                                <slot :name="el.field" :trData="item" :value="item[el.field]" :trIndex="trIndex" :tdIndex="tdIndex"></slot>
-                            </template>
-                            <template v-else>
-                                {{ item[el.field] }}
-                            </template>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="table">
+        <table class="table-box" border="0" cellspacing="0" cellpadding="0">
+            <!-- 表头 -->
+            <div class="thead-box" :class="{'shift-right': isScroll}">
+                <thead-index v-bind="$attrs" 
+                             :isCheckAll="isCheckAll" 
+                             @changeboxAll="changeAll"
+                             @searchChange="searchChange">
+                    <template v-for="(index, name) in $slots" v-slot:[name]="slotData">
+                        <slot :name="name" 
+                                :trData="slotData.trData" 
+                                :value="slotData.value"
+                                :thIndex="slotData.thIndex"/>
+                    </template>
+                </thead-index>
+            </div>
+            <!-- 表体 -->
+            <div class="tbody-box" :style="{ height: tbodyHeight}" @scroll="onScroll">
+                <tbody-index v-bind="$attrs"
+                                ref="tbody" 
+                                :checkValue="checkValue"
+                                :tbodyList="tbodyList"
+                                @setSelectValue="setSelectValue">
+                    <template v-for="(index, name) in $slots" v-slot:[name]="slotData">
+                        <slot :name="name" 
+                                :trData="slotData.trData" 
+                                :value="slotData.value" 
+                                :trIndex="slotData.trIndex" 
+                                :tdIndex="slotData.tdIndex"/>
+                    </template>
+                </tbody-index>
+            </div>
+        </table>
         <!-- 分页组件 -->
         <pageInation v-if="isPagination" v-bind="$attrs" @handlerPage="pageUp"/>
     </div>
 </template>
 <script>
-import { computed, defineComponent, onMounted, reactive, toRefs, ref, watch, nextTick } from 'vue'
+import { defineComponent, reactive, ref, watch, toRefs, computed, nextTick } from 'vue'
 import pageInation from './pageination.vue'
+import theadIndex from './theadIndex.vue'
+import tbodyIndex from './tbodyIndex.vue'
 export default defineComponent({
     name: 'tableIndex',
     components: {
-        pageInation
+        pageInation,
+        theadIndex,
+        tbodyIndex
         },
     props: {
-        // 表头配置数据
-        theadData: {
-            type: Array,
-            default: () => []
-        },
-        // 表体数据
-        tbodyData: {
-            type: Array,
-            default: () => []
-        },
-        // 多选
-        selection: {
-            type: Boolean,
-            default: false
-        },
-        // 单选
-        multiple: {
-            type: Boolean,
-            default: false
-        },
         // 最大高度
         maxHeight: {
-            type: String,
-            default: 'auto'
+            type: Number,
+            default: 0
         },
         // 支持分页
         isPagination: {
             type: Boolean,
             default: false
         },
-        // 支持筛选
-        search: {
-            type: Object,
-            default: ()=>{}
-        }
+        // 表体数据
+        tbodyData: {
+            type: Array,
+            default: () => []
+        },
     },
-    emits: ['handlerTrClick', 'changePage', 'handlerSort'],
+    emits: ['handlerTrClick', 'changePage', 'handlerSort', 'getCheckboxValue'],
     setup(props, { emit, expose }) {
         const tbody = ref(null)
         const state = reactive({
-            checkboxAll: false,
-            checkboxValue: [],
+            tbodyList: [],
+            checkValue: [],
             radioValue: '',
             topVal: '0px',
             isScroll: false,
             tableWidth: 'auto',
             isHeadScroll: false,
-            theadSort: {}
+            theadHeight: 0,
+            tbodyHeight: 0
         })
 
-        onMounted(() => {
-            nextTick(() => {
-                setWidth()
+        watch(()=>props.tbodyData, () => {
+            state.tbodyList = props.tbodyData;
+        },{immediate: true})
+
+        watch([()=>state.tbodyList, ()=>props.maxHeight], () => {
+            nextTick(()=>{
+                setHeight();
             })
-            props.theadData.forEach(item => {
-                item.sort && (state.theadSort[item.field] = 'top')
-            })
-        })
+        },{immediate: true})
 
-        watch(props.tbodyData, () => {
-            setWidth()
-        })
-
-        const setWidth = () => {
-            let height = tbody.value.offsetHeight
-            let width = tbody.value.offsetWidth
-            console.log(width, height)
-            state.tableWidth = width + 'px'
-            if (height > parseFloat(props.maxHeight)) {
-                state.isScroll = true
-                state.tableWidth = tbody.value.offsetWidth + 18 + 'px'
-            }
+        const setHeight = ()=>{
+            state.theadHeight = document.querySelector('.thead-box').offsetHeight;
+            let height = tbody.value.$el.offsetHeight;
+            state.isScroll = height > parseFloat(props.maxHeight);
+            let bodyHeight = props.maxHeight? props.maxHeight - state.theadHeight : 'auto';
+            state.tbodyHeight = bodyHeight !== 'auto' && height<bodyHeight? height+1+'px' : bodyHeight+'px'
+            console.log('计算body的高度', state.tbodyHeight);
         }
 
-        const checkModel = computed({
-            get() {
-                return state.checkboxValue
-            },
-            set(val) {
-                emit('getCheckboxValue', val)
-                return (state.checkboxValue = val)
-            }
+        const isCheckAll = computed(()=>{
+            console.log('计算是否全选', state.checkValue.length);
+            return state.tbodyList.length === state.checkValue.length;
         })
 
-        const radioModel = computed({
-            get() {
-                return state.radioValue
-            },
-            set(val) {
-                emit('getCheckboxValue', val)
-                state.radioValue = val
-                return (state.radioValue = val)
-            }
-        })
-
-        const changeAll = () => {
-            state.checkboxValue = state.checkboxAll ? props.tbodyData.map(item => item.id) : []
-        }
-
-        const setStyle = obj => {
-            let styles = {}
-            obj.width && (styles.width = obj.width)
-            obj.align && (styles['text-align'] = obj.align)
-            return styles
-        }
-
-        const onScroll = e => {
-            let top = e.target.scrollTop
-            let height = tbody.value.offsetHeight
-            let scrollHeight = height - parseFloat(props.maxHeight)
-            state.isScroll = top < scrollHeight
-            state.isHeadScroll = top > 0
-            state.topVal = top + 'px'
-        }
+        // const onScroll = e => {
+        //     // let top = e.target.scrollTop
+        //     // let height = tbody.value.$el.offsetHeight
+        //     // let scrollHeight = height - parseFloat(props.maxHeight)
+        //     // state.isScroll = top < scrollHeight
+        //     // state.isHeadScroll = top > 0
+        //     // state.topVal = top + 'px'
+        // }
 
         const getCheckboxValue = () => {
             if (props.multiple) {
                 return state.radioValue
             } else if (props.selection) {
-                return state.checkboxValue
+                return state.checkValue
             }
         }
 
@@ -187,11 +128,32 @@ export default defineComponent({
         const sortClick = (e, field) => {
             let sort = e.target.getAttribute('data-name')
             state.theadSort[field] = sort
+            console.log('当前排序的状态', field, sort);
             emit('handlerSort', { field, sort })
         }
 
         const pageUp = (pageObj)=>{
+            console.log('当前跳转的页码', pageObj);
             emit('changePage', pageObj)
+        }
+
+        const changeAll = (isAll)=>{
+            state.checkValue = isAll ? state.tbodyList.map(item => item.id) : []
+        }
+
+        const setSelectValue = (item) =>{
+            console.log('当前选择的数据', item);
+            item.type === 'multiple'? state.radioValue = item.value : state.checkValue = item.value;
+        }
+
+        const searchChange = (searchObj) =>{
+           if(searchObj.value){
+                state.tbodyList = state.tbodyList.filter(item=>{
+                    return item[searchObj.field].includes(searchObj.value)
+                })
+           }else{
+               state.tbodyList = props.tbodyData;
+           }
         }
 
         expose({
@@ -200,35 +162,39 @@ export default defineComponent({
 
         return {
             ...toRefs(state),
-            checkModel,
-            radioModel,
             changeAll,
-            setStyle,
-            onScroll,
+            // onScroll,
             tbody,
             trClick,
             sortClick,
-            pageUp
+            pageUp,
+            setSelectValue,
+            setHeight,
+            isCheckAll,
+            searchChange
         }
     }
 })
 </script>
-<style scoped>
+<style>
 .table {
-    position: relative;
-    overflow: auto;
-    width: 100%;
+    display: inline-block;
 }
-.table-isscroll {
-    border-bottom: 1px solid #999;
+.shift-right{
+    padding-right: 16px;
 }
 .table-box {
-    border-right: 1px solid #999;
-    border-bottom: 1px solid #999;
     table-layout: fixed;
 }
+.thead-box{
+   border: 1px solid #999; 
+}
+.tbody-box{
+    overflow: auto;
+    border: 1px solid #999; 
+    border-top: none;
+}
 .table-header-thead {
-    position: absolute;
     background-color: #eee;
     z-index: 10;
 }
@@ -239,12 +205,27 @@ export default defineComponent({
 .tbody-tr_td,
 .thead-tr_checkbox,
 .tbody-tr_checkbox {
-    width: 100px;
+    width: 120px;
     height: 30px;
     line-height: 30px;
     padding: 5px 10px;
-    border-top: 1px solid #999;
     border-left: 1px solid #999;
+    display: inline-block;
+}
+.tbody-tr_td,.tbody-tr_checkbox{
+    border-top: 1px solid #999;
+}
+.table-body-tbody_tr:nth-of-type(1)>.tbody-tr_td,
+.table-body-tbody_tr:nth-of-type(1)>.tbody-tr_checkbox{
+    border-top: none;
+}
+.table-header-thead_tr>th:nth-of-type(1),
+.table-body-tbody_tr>td:nth-of-type(1){
+    border-left: none;
+}
+.table-header-thead_tr,
+.table-body-tbody_tr{
+    display: flex;
 }
 .thead-tr_checkbox,
 .tbody-tr_checkbox {

@@ -4,7 +4,7 @@
             ref="tableItem"
             :theadData="theadData" 
             :tbodyData="tbodyData" 
-            maxHeight="150px" 
+            :maxHeight="200" 
             :selection="true" 
             :isPagination="true" 
             :total="100" 
@@ -13,17 +13,13 @@
             @changePage="changePage"
             @handlerSort="handlerSort"
             @handlerTrClick="handlerTrClick">
-            <!-- <template #select>
-      <span>
-        <input type="checkbox" name="checkAll"/>
-      </span>
-    </template> -->
-            <template #thead-name="{ value }">
-                <span>{{value}}√</span>
-            </template>
-            <template #sex="{ value }">
+            <!-- <template #thead-name="{ value }">
+                <span>{{ value }}√</span>
+            </template> -->
+            
+            <template #sex="{ trData }">
                 <span>
-                    {{ getSex(value) }}
+                    {{ getSex(trData) }}
                 </span>
             </template>
             <template #operation="{ trData }">
@@ -47,7 +43,7 @@ export default defineComponent({
             a: 1,
             theadData: [],
             tbodyData: [],
-            searchObj: {}
+            searchObj: ['name']
         })
         onMounted(() => {
             state.theadData = [
@@ -144,11 +140,11 @@ export default defineComponent({
          * @author Mike
          * @Date: 2022-05-08 00:11:01
          */
-        const getSex = value => {
+        const getSex = (trData) => {
             const sexObj = {
                 sex: ''
             }
-            switch (value) {
+            switch (trData.sex) {
                 case 0:
                     sexObj.sex = '男'
                     break
