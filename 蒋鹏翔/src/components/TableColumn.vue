@@ -1,8 +1,10 @@
 <template>
     <td :style="{ width: width + 'px' }">
+        <span v-if="dataIndex === 'type'">序号</span>
         <!-- 传了title就用，没有就用插槽 -->
         <span v-if="title">{{ title }}</span>
         <slot v-else></slot>
+
     </td>
 </template>
 

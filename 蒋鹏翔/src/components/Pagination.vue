@@ -40,6 +40,8 @@
 </template>
 
 <script>
+import { computed, ref } from "vue";
+
 export default {
     name: "JPagination",
 
@@ -64,68 +66,69 @@ export default {
             type: Number,
             default: 3,
         },
+    },
 
-        changePageNo: {
-            type: Function,
-        },
-    },
-    data: () => {
-        return {
-            val: 1,
-        };
-    },
-    computed: {
+    setup(props, { emit }) {
+        const val = ref(1);
+
         //计算总页数
-        totalPageNo() {
-            return Math.ceil(this.total / this.pageSize);
-        },
+        const totalPageNo = computed(() => {
+            return Math.ceil(props.total / props.pageSize);
+        });
 
-        startEnd() {
+        const pageCompute = (num) => {
+            val.value = num;
+            emit("changePageNo", Math.abs(num));
+        };
+
+        // 计算连续页
+        const startEnd = computed(() => {
             let start = 0;
             let end = 0;
-            let { totalPageNo, pageNum, continueNo } = this;
-
-            if (totalPageNo <= continueNo) {
+            if (totalPageNo.value <= props.continueNo) {
                 start = 1;
-                end = totalPageNo;
+                end = totalPageNo.value;
             } else {
-                start = pageNum - Math.floor(continueNo / 2);
-                end = pageNum + Math.floor(continueNo / 2);
+                start = props.pageNum - Math.floor(props.continueNo / 2);
+                end = props.pageNum + Math.floor(props.continueNo / 2);
                 if (start <= 1) {
                     start = 1;
-                    end = continueNo;
+                    end = props.continueNo;
                 }
-                if (end >= totalPageNo) {
-                    end = totalPageNo;
-                    start = end - continueNo + 1;
+                if (end >= totalPageNo.value) {
+                    end = totalPageNo.value;
+                    start = end - props.continueNo + 1;
                 }
             }
-
             return { start, end };
-        },
-    },
+        });
 
-    methods: {
-        pageCompute(num) {
-            this.val = num
-            this.changePageNo(Math.abs(num));
-        },
+        console.log(startEnd.value)
 
-        inputPage() {
-            let num = this.val;
+        // 输入跳转校验
+        const inputPage = () => {
+            let num = val.value;
             if (typeof num === "number") {
                 num =
-                    num > this.totalPageNo
-                        ? this.totalPageNo
+                    num > totalPageNo.value
+                        ? totalPageNo.value
                         : num < 1
                         ? 1
                         : num;
-                this.val = num;
-                this.changePageNo(Math.abs(num));
+                val.value = num;
+                pageCompute(Math.abs(num))
             } else {
-                this.val = 1;
+                val.value = 1;
             }
-        },
+        };
+
+        return {
+            val,
+            totalPageNo,
+            startEnd,
+            pageCompute,
+            inputPage
+        };
     },
 };
 </script>
