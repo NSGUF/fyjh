@@ -1,9 +1,12 @@
 import { mount } from '@vue/test-utils'
-import TableIndex from '@/components/table/tableIndex'
+import TableIndex from '@/components/table/tableIndex.vue'
+import TbodyIndex from '@/components/table/tbodyIndex.vue'
+// import TheadIndex from '@/components/table/theadIndex.vue'
 
 describe('TableIndex', () => {
     // 挂载组件，生成包裹器
-    let wrapper = mount(TableIndex);
+    const wrapper = mount(TableIndex);
+    const tbody = mount(TbodyIndex);
 
     // 测试table是否渲染出来
     it('renders a table', async()=>{
@@ -68,29 +71,32 @@ describe('TableIndex', () => {
         })
         // console.log(wrapper.html());
     })
+
     // 是否生成单选
-    // it('renders a multiple', async()=>{
-    //     await wrapper.setProps({
-    //         multiple: true
-    //     })
-    //     expect(wrapper.props().multiple).toBe(true);
-    //     let radioInput =  wrapper.findAll('input[type="radio"]').at(0);
-    //     await radioInput.setChecked();
-    //     expect(radioInput.element.checked).toBeTruthy();
-    //     expect(wrapper.emitted().getCheckboxValue).toEqual([['001']]);
-    // })
+    it('renders a multiple', async()=>{
+        await wrapper.setProps({
+            multiple: true
+        })
+        const tbody = wrapper.findComponent({ name: 'tbodyIndex' })
+
+        expect(tbody.props().multiple).toBe(true);
+        const radioInput = tbody.findAll('input[type="radio"]')[0];
+        console.log(radioInput);
+        // await radioInput.setChecked();
+        // expect(radioInput.element.checked).toBeTruthy();
+        // expect(wrapper.emitted().getCheckboxValue).toEqual([['001']]);
+    })
 
     // 是否生成多选
-    // it('renders a selection', async()=>{
-    //     await wrapper.setProps({
-    //         selection: true
-    //     })
-    //     expect(wrapper.props().selection).toBe(true);
-    //     let checkboxInput =  wrapper.findAll('.tbody-tr_checkbox input[type="checkbox"]').at(1);
-    //     await checkboxInput.setChecked();
-    //     expect(checkboxInput.element.checked).toBeTruthy();
-    //     expect(wrapper.emitted().getCheckboxValue).toEqual([[['002']]]);
-    // })
+    it('renders a selection', async()=>{
+        await wrapper.setProps({
+            selection: true
+        })
+        const tbody = wrapper.findComponent({ name: 'tbodyIndex' })
+        expect(tbody.props().selection).toBe(true);
+        const checkboxInput =  wrapper.findAll('.tbody-tr_checkbox input[type="checkbox"]')[0];
+        console.log(checkboxInput);
+    })
 
     // 测试最大高度
     it('renders a maxHeight', async()=>{
@@ -113,18 +119,17 @@ describe('TableIndex', () => {
         })
         expect(wrapper.props().isPagination).toBe(true);
 
-        const paginationName = wrapper.findComponent({ name: 'pageInation' }) // 通过 `name` 找到 pageInation
+        const paginationName = wrapper.findComponent({ name: 'pageInation' })
         expect(paginationName.exists()).toBe(true)
     })
 
     // 测试筛选
     it('renders a search', async()=>{
         await wrapper.setProps({
-            search: {
-                field: 'six'
-            }
+            search: [ 'six' ]
         })
-        expect(wrapper.props().search.field).toBe('six');
+        const thead = wrapper.findComponent({ name: 'theadIndex' })
+        expect(thead.props().search[0]).toBe('six');
     })
 
   })

@@ -35,19 +35,24 @@
         </tr>
     </tbody>
 </template>
-<script>
-import { defineComponent, reactive, computed, toRefs, watch } from 'vue'
+<script lang="ts">
+import { defineComponent, reactive, computed, toRefs, watch, PropType } from 'vue'
+import { TheadDataType,
+         TbodyDataType,
+         StateTbodyIndexType,
+         StyleValueType,
+         StyleObjType } from './table'
 export default defineComponent({
-    name: 'theadIndex',
+    name: 'tbodyIndex',
     props: {
         // 表头配置数据
         theadData: {
-            type: Array,
+            type: Array as PropType<TheadDataType[]>,
             default: () => []
         },
         // 表体数据
         tbodyList: {
-            type: Array,
+            type: Array as PropType<TbodyDataType[]>,
             default: () => []
         },
         // 多选
@@ -61,13 +66,13 @@ export default defineComponent({
             default: false
         },
         checkValue: {
-            type: Array,
+            type: Array as PropType<string[]>,
             default: ()=>[]
         }
     },
     emits: ['setSelectValue', 'trClick'],
     setup(props, {emit}){
-        const state = reactive({
+        const state: StateTbodyIndexType = reactive({
             checkboxValue: [],
             radioValue: '',
         })
@@ -80,7 +85,7 @@ export default defineComponent({
             get() {
                 return state.checkboxValue
             },
-            set(val) {
+            set(val: string[]) {
                 emit('setSelectValue', { type: 'selection', value: val})
                 return (state.checkboxValue = val)
             }
@@ -90,18 +95,18 @@ export default defineComponent({
             get() {
                 return state.radioValue
             },
-            set(val) {
+            set(val: string) {
                 emit('setSelectValue', { type: 'multiple', value: val})
                 return (state.radioValue = val)
             }
         })
 
-        const trClick = (trData)=>{
+        const trClick = (trData: any)=>{
             emit('trClick', trData);
         }
 
-        const setStyle = obj => {
-            let styles = {}
+        const setStyle = (obj:StyleObjType) => {
+            let styles:StyleValueType = {};
             obj.width && (styles.width = obj.width)
             obj.align && (styles['text-align'] = obj.align)
             return styles
