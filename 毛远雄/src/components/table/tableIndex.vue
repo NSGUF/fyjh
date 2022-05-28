@@ -1,20 +1,13 @@
 <template>
     <div class="table">
-        <table class="table-box" 
-               border="0" 
-               cellspacing="0" 
-               cellpadding="0">
+        <table class="table-box" border="0" cellspacing="0" cellpadding="0">
             <!-- 表头 -->
-            <div class="thead-box"
-                 ref="thead" 
-                 :class="{'shift-right': isScroll}">
+            <div class="thead-box" :class="{'shift-right': isScroll}">
                 <thead-index v-bind="$attrs" 
                              :isCheckAll="isCheckAll" 
                              @changeboxAll="changeAll"
-                             @searchChange="searchChange"
-                             @handlerSort="handlerSort">
-                    <template v-for="(index, name) in $slots" 
-                              v-slot:[name]="slotData">
+                             @searchChange="searchChange">
+                    <template v-for="(index, name) in $slots" v-slot:[name]="slotData">
                         <slot :name="name" 
                                 :trData="slotData.trData" 
                                 :value="slotData.value"
@@ -23,16 +16,13 @@
                 </thead-index>
             </div>
             <!-- 表体 -->
-            <div class="tbody-box" 
-                 :style="{ height: tbodyHeight}">
+            <div class="tbody-box" :style="{ height: tbodyHeight}" @scroll="onScroll">
                 <tbody-index v-bind="$attrs"
                                 ref="tbody" 
                                 :checkValue="checkValue"
                                 :tbodyList="tbodyList"
-                                @setSelectValue="setSelectValue"
-                                @trClick="trClick">
-                    <template v-for="(index, name) in $slots" 
-                              v-slot:[name]="slotData">
+                                @setSelectValue="setSelectValue">
+                    <template v-for="(index, name) in $slots" v-slot:[name]="slotData">
                         <slot :name="name" 
                                 :trData="slotData.trData" 
                                 :value="slotData.value" 
@@ -43,22 +33,14 @@
             </div>
         </table>
         <!-- 分页组件 -->
-        <pageInation v-if="isPagination" 
-                     v-bind="$attrs" 
-                     @handlerPage="pageUp"/>
+        <pageInation v-if="isPagination" v-bind="$attrs" @handlerPage="pageUp"/>
     </div>
 </template>
-<script lang="ts">
-import { defineComponent, reactive, ref, watch, toRefs, computed, nextTick, PropType} from 'vue'
+<script>
+import { defineComponent, reactive, ref, watch, toRefs, computed, nextTick } from 'vue'
 import pageInation from './pageination.vue'
 import theadIndex from './theadIndex.vue'
 import tbodyIndex from './tbodyIndex.vue'
-import { StateTableIndexType, 
-         TbodyDataType, 
-         SelectValueType, 
-         SearchValueType, 
-         SortValueType,
-         PageValueType } from './table'
 export default defineComponent({
     name: 'tableIndex',
     components: {
@@ -79,15 +61,14 @@ export default defineComponent({
         },
         // 表体数据
         tbodyData: {
-            type: Array as PropType<TbodyDataType[]>,
+            type: Array,
             default: () => []
         },
     },
-    emits: ['handlerTrClick', 'changePage', 'sortChange'],
-    setup(props, { emit, attrs }) {
-        const tbody = ref<any>(null)
-        const thead = ref<any>(null)
-        const state : StateTableIndexType = reactive({
+    emits: ['handlerTrClick', 'changePage', 'handlerSort', 'getCheckboxValue'],
+    setup(props, { emit, expose }) {
+        const tbody = ref(null)
+        const state = reactive({
             tbodyList: [],
             checkValue: [],
             radioValue: '',
@@ -110,53 +91,64 @@ export default defineComponent({
         },{immediate: true})
 
         const setHeight = ()=>{
-            let height = tbody?.value?.$el?.offsetHeight || 0;
-            state.theadHeight = parseFloat(thead?.value?.offsetHeight || 0);
-            state.isScroll = height > props.maxHeight;
+            state.theadHeight = document.querySelector('.thead-box').offsetHeight;
+            let height = tbody.value.$el.offsetHeight;
+            state.isScroll = height > parseFloat(props.maxHeight);
             let bodyHeight = props.maxHeight? props.maxHeight - state.theadHeight : 'auto';
             state.tbodyHeight = bodyHeight !== 'auto' && height<bodyHeight? height+1+'px' : bodyHeight+'px'
-            state.tbodyHeight !== 'auto' && parseFloat(state.tbodyHeight)<=0 && console.log('body的高度', state.tbodyHeight);
+            console.log('计算body的高度', state.tbodyHeight);
         }
 
         const isCheckAll = computed(()=>{
-            !state.checkValue && console.log('是否全选', state.checkValue);
+            console.log('计算是否全选', state.checkValue.length);
             return state.tbodyList.length === state.checkValue.length;
         })
 
+        // const onScroll = e => {
+        //     // let top = e.target.scrollTop
+        //     // let height = tbody.value.$el.offsetHeight
+        //     // let scrollHeight = height - parseFloat(props.maxHeight)
+        //     // state.isScroll = top < scrollHeight
+        //     // state.isHeadScroll = top > 0
+        //     // state.topVal = top + 'px'
+        // }
+
         const getCheckboxValue = () => {
-            if (attrs.multiple) {
+            if (props.multiple) {
                 return state.radioValue
-            } else if (attrs.selection) {
+            } else if (props.selection) {
                 return state.checkValue
             }
         }
 
-        const trClick = (trData: any) => {
-            !trData && console.log('当前行的数据', trData);
+        const trClick = trData => {
             emit('handlerTrClick', trData)
         }
 
-        const handlerSort = (sortObj: SortValueType) => {
-           emit('sortChange', sortObj);
+        const sortClick = (e, field) => {
+            let sort = e.target.getAttribute('data-name')
+            state.theadSort[field] = sort
+            console.log('当前排序的状态', field, sort);
+            emit('handlerSort', { field, sort })
         }
 
-        const pageUp = (pageObj: PageValueType)=>{
-            !pageObj && console.log('当前跳转的页码', pageObj);
+        const pageUp = (pageObj)=>{
+            console.log('当前跳转的页码', pageObj);
             emit('changePage', pageObj)
         }
 
-        const changeAll = (isAll:boolean)=>{
-            state.checkValue = isAll ? state.tbodyList.map((item: any) => item.id) : []
+        const changeAll = (isAll)=>{
+            state.checkValue = isAll ? state.tbodyList.map(item => item.id) : []
         }
 
-        const setSelectValue = (item: SelectValueType) =>{
-            !item && console.log('当前选择的数据', item);
-            item.type === 'multiple'? state.radioValue = item.radioValue : state.checkValue = item.checkValue;
+        const setSelectValue = (item) =>{
+            console.log('当前选择的数据', item);
+            item.type === 'multiple'? state.radioValue = item.value : state.checkValue = item.value;
         }
 
-        const searchChange = (searchObj: SearchValueType) =>{
+        const searchChange = (searchObj) =>{
            if(searchObj.value){
-                state.tbodyList = state.tbodyList.filter((item: any)=>{
+                state.tbodyList = state.tbodyList.filter(item=>{
                     return item[searchObj.field].includes(searchObj.value)
                 })
            }else{
@@ -164,19 +156,22 @@ export default defineComponent({
            }
         }
 
+        expose({
+            getCheckboxValue
+        })
+
         return {
             ...toRefs(state),
             changeAll,
+            // onScroll,
             tbody,
-            thead,
             trClick,
-            handlerSort,
+            sortClick,
             pageUp,
             setSelectValue,
             setHeight,
             isCheckAll,
-            searchChange,
-            getCheckboxValue
+            searchChange
         }
     }
 })
@@ -213,7 +208,6 @@ export default defineComponent({
     width: 120px;
     height: 30px;
     line-height: 30px;
-    text-align: center;
     padding: 5px 10px;
     border-left: 1px solid #999;
     display: inline-block;
@@ -240,7 +234,6 @@ export default defineComponent({
 .thead-sort i {
     padding: 0 5px;
     cursor: pointer;
-    font-style: normal;
 }
 .thead-sort .sort-active {
     color: rgb(10, 108, 244);

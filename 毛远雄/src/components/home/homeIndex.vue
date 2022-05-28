@@ -1,5 +1,5 @@
 <template>
-    <div class="home-box">
+    <div>
         <Table 
             ref="tableItem"
             :theadData="theadData" 
@@ -169,8 +169,4 @@ export default defineComponent({
     }
 })
 </script>
-<style scoped>
-.home-box{
-    text-align: center;
-}
-</style>
+<style scoped></style>
