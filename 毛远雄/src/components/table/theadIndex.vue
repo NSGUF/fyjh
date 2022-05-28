@@ -21,11 +21,21 @@
                 </template>
                 <template v-else>
                     {{ item.name }}
-                    <span class="thead-sort" v-if="item.sort" @click="sortClick($event, item.field)">
-                        <i data-name="top" :class="{ 'sort-active': theadSort[item.field] === 'top' }">↑</i>
-                        <i data-name="btn" :class="{ 'sort-active': theadSort[item.field] === 'btn' }">↓</i>
+                    <span class="thead-sort" 
+                          v-if="item.sort" 
+                          @click="sortClick($event, item.field)">
+                        <i data-name="top" 
+                           :class="{ 'sort-active': theadSort[item.field] === 'top' }">
+                           ↑
+                        </i>
+                        <i data-name="btn" 
+                           :class="{ 'sort-active': theadSort[item.field] === 'btn' }">
+                           ↓
+                        </i>
                     </span>
-                    <span class="thead-filter" v-if="isShowFilter(item.field)" @click.stop="filterClick($event, item.field)">
+                    <span class="thead-filter" 
+                          v-if="isShowFilter(item.field)" 
+                          @click.stop="filterClick($event, item.field)">
                         <i>♜</i>
                     </span>
                 </template>
@@ -36,18 +46,25 @@
              :style="{'top': filterTop, 'left': filterLeft}"
              @click.stop>
             <input v-model="searchVal" />
-            <p class="filter-botton"><button @click="searchClick">search</button><button @click="searchVal=''">reset</button></p>
+            <p class="filter-botton">
+                <button @click="searchClick">search</button>
+                <button @click="searchVal=''">reset</button>
+            </p>
         </div>
     </thead>
 </template>
-<script>
-import { defineComponent, onMounted, reactive, toRefs, watch } from 'vue'
+<script lang="ts">
+import { defineComponent, onMounted, PropType, reactive, toRefs, watch } from 'vue'
+import { TheadDataType, 
+         StateTheadIndexType,
+         StyleValueType,
+         StyleObjType } from './table'
 export default defineComponent({
     name: 'theadIndex',
     props: {
         // 表头配置数据
         theadData: {
-            type: Array,
+            type: Array as PropType<TheadDataType[]>,
             default: () => []
         },
         // 多选
@@ -60,24 +77,19 @@ export default defineComponent({
             type: Boolean,
             default: false
         },
-        // 需要排序的配置字段
-        theadSort: {
-            type: Object,
-            default: () => {}
-        },
         isCheckAll: {
             type: Boolean,
             default: false
         },
         search: {
-           type: Array,
+           type: Array as PropType<string[]>,
            default: () => [] 
         }
     },
-    emits: ['changeboxAll', 'searchChange'],
+    emits: ['changeboxAll', 'searchChange', 'handlerSort'],
     setup(props, {emit}){
 
-        const state = reactive({
+        const state: StateTheadIndexType = reactive({
             checkboxAll: false,
             theadSort: {},
             searchVal: '',
@@ -88,7 +100,7 @@ export default defineComponent({
         })
 
         onMounted(()=>{
-            props.theadData.forEach(item => {
+            props.theadData?.forEach((item: TheadDataType) => {
                 item.sort && (state.theadSort[item.field] = 'top')
             })
             document.addEventListener('click',()=>{
@@ -100,7 +112,7 @@ export default defineComponent({
             state.checkboxAll = props.isCheckAll;
         })
 
-        const isShowFilter = (field) => {
+        const isShowFilter = (field: string) => {
             return props.search.includes(field);
         }
 
@@ -108,14 +120,21 @@ export default defineComponent({
             emit('changeboxAll', state.checkboxAll);
         }
 
-        const setStyle = obj => {
-            let styles = {}
+        const setStyle = (obj: StyleObjType) => {
+            let styles:StyleValueType  = {}
             obj.width && (styles.width = obj.width)
             obj.align && (styles['text-align'] = obj.align)
             return styles
         }
 
-        const filterClick = (e, field)=>{
+        const sortClick = (e: any, field: string) => {
+            let sort = e.target.getAttribute('data-name')
+            state.theadSort[field] = sort
+            !field || !sort && console.log('当前排序的状态', field, sort);
+            emit('handlerSort', { field, sort })
+        }
+
+        const filterClick = (e: any, field: string)=>{
             state.filterTop = e.y + 12 + 'px';
             state.filterLeft = e.x - 220 + 'px';
             state.filterShow = true;
@@ -132,7 +151,8 @@ export default defineComponent({
             setStyle,
             isShowFilter,
             filterClick,
-            searchClick
+            searchClick,
+            sortClick
         }
     }
 })
