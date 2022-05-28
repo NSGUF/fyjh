@@ -35,24 +35,19 @@
         </tr>
     </tbody>
 </template>
-<script lang="ts">
-import { defineComponent, reactive, computed, toRefs, watch, PropType } from 'vue'
-import { TheadDataType,
-         TbodyDataType,
-         StateTbodyIndexType,
-         StyleValueType,
-         StyleObjType } from './table'
+<script>
+import { defineComponent, reactive, computed, toRefs, watch } from 'vue'
 export default defineComponent({
-    name: 'tbodyIndex',
+    name: 'theadIndex',
     props: {
         // 表头配置数据
         theadData: {
-            type: Array as PropType<TheadDataType[]>,
+            type: Array,
             default: () => []
         },
         // 表体数据
         tbodyList: {
-            type: Array as PropType<TbodyDataType[]>,
+            type: Array,
             default: () => []
         },
         // 多选
@@ -66,13 +61,13 @@ export default defineComponent({
             default: false
         },
         checkValue: {
-            type: Array as PropType<string[]>,
+            type: Array,
             default: ()=>[]
         }
     },
     emits: ['setSelectValue', 'trClick'],
     setup(props, {emit}){
-        const state: StateTbodyIndexType = reactive({
+        const state = reactive({
             checkboxValue: [],
             radioValue: '',
         })
@@ -85,9 +80,8 @@ export default defineComponent({
             get() {
                 return state.checkboxValue
             },
-            set(val: string[]) {
-                console.log(val);
-                emit('setSelectValue', { type: 'selection', checkValue: val})
+            set(val) {
+                emit('setSelectValue', { type: 'selection', value: val})
                 return (state.checkboxValue = val)
             }
         })
@@ -96,18 +90,18 @@ export default defineComponent({
             get() {
                 return state.radioValue
             },
-            set(val: string) {
-                emit('setSelectValue', { type: 'multiple', radioValue: val})
+            set(val) {
+                emit('setSelectValue', { type: 'multiple', value: val})
                 return (state.radioValue = val)
             }
         })
 
-        const trClick = (trData: any)=>{
+        const trClick = (trData)=>{
             emit('trClick', trData);
         }
 
-        const setStyle = (obj:StyleObjType) => {
-            let styles:StyleValueType = {};
+        const setStyle = obj => {
+            let styles = {}
             obj.width && (styles.width = obj.width)
             obj.align && (styles['text-align'] = obj.align)
             return styles

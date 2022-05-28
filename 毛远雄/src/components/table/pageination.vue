@@ -1,25 +1,12 @@
 <template>
     <div class="pagination-box">
-        <i class="pagination-box-left page-hover" 
-           @click="prevPage">
-           上一页
-        </i>
-        <span class="pagination-box-size page-hover" 
-              v-for="item in getPage" 
-              :key="item" 
-              :class="{ 'page-size_active': pageIndexs === item }" 
-              @click="setPage(item)">
-            {{ item }}
-        </span
-        ><i class="pagination-box-right page-hover" 
-            @click="nextPage">
-            下一页
-        </i>
+        <i class="pagination-box-left page-hover" @click="prevPage">上一页</i
+        ><span class="pagination-box-size page-hover" v-for="item in getPage" :key="item" :class="{ 'page-size_active': pageIndexs === item }" @click="setPage(item)">{{ item }}</span
+        ><i class="pagination-box-right page-hover" @click="nextPage">下一页</i>
     </div>
 </template>
-<script lang="ts">
+<script>
 import { defineComponent, computed, reactive, toRefs } from 'vue'
-import { StatePageinationType } from './table'
 export default defineComponent({
     name: 'pageInation',
     components: {},
@@ -38,7 +25,7 @@ export default defineComponent({
     emits: ['handlerPage'],
     setup(props, {emit}) {
 
-        const state:StatePageinationType = reactive({
+        const state = reactive({
             pageIndexs: 1,
             pageSizes: props.pageSize
         })
@@ -57,7 +44,7 @@ export default defineComponent({
             emit('handlerPage', { pageSize: state.pageSizes, pageIndex: state.pageIndexs })
         }
 
-        const setPage = (index: number) => {
+        const setPage = index => {
             state.pageIndexs = index
             emit('handlerPage', { pageSize: state.pageSizes, pageIndex: state.pageIndexs })
         }
