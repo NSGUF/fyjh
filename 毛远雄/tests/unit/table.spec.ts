@@ -14,7 +14,8 @@ describe('TableIndex', () => {
             theadData: [
                 {
                     field: 'name',
-                    name: '姓名'
+                    name: '姓名',
+                    align: 'left'
                 },
                 {
                     field: 'age',
@@ -27,7 +28,8 @@ describe('TableIndex', () => {
                 },
                 {
                     field: 'operation',
-                    name: '操作'
+                    name: '操作',
+                    width: '120px'
                 }
             ],
             tbodyData: [
@@ -75,39 +77,40 @@ describe('TableIndex', () => {
     // 是否生成单选
     it('renders a multiple', async()=>{
         await wrapper.setProps({
-            multiple: true
+            multiple: true,
+            selection: false
         })
         const tbody = wrapper.findComponent({ name: 'tbodyIndex' })
-
         expect(tbody.props().multiple).toBe(true);
-        const radioInput = tbody.findAll('input[type="radio"]')[0];
-        console.log(radioInput);
-        // await radioInput.setChecked();
-        // expect(radioInput.element.checked).toBeTruthy();
-        // expect(wrapper.emitted().getCheckboxValue).toEqual([['001']]);
+        const radioInput = tbody.findAll('.tbody-tr_checkbox input[type="radio"]')[0];
+        await radioInput.setValue('001'); 
+        await radioInput.trigger('input');
+        await wrapper.vm.getCheckboxValue();
     })
 
     // 是否生成多选
     it('renders a selection', async()=>{
         await wrapper.setProps({
-            selection: true
+            selection: true,
+            multiple: false
         })
-        const tbody = wrapper.findComponent({ name: 'tbodyIndex' })
+        const tbody = wrapper.findComponent({ name: 'tbodyIndex' });
+        const thead = wrapper.findComponent({ name: 'theadIndex'});
         expect(tbody.props().selection).toBe(true);
-        const checkboxInput =  wrapper.findAll('.tbody-tr_checkbox input[type="checkbox"]')[0];
-        console.log(checkboxInput);
+        const checkInput = tbody.findAll('.tbody-tr_checkbox input[type="checkbox"]')[1];
+        await checkInput.setValue(['002']); 
+        await checkInput.trigger('input');
+        thead.vm.changeAll();
+        thead.vm.$emit('changeboxAll', true);
+        await wrapper.vm.getCheckboxValue();
     })
 
     // 测试最大高度
     it('renders a maxHeight', async()=>{
         await wrapper.setProps({
-            maxHeight: '140px'
+            maxHeight: 100
         })
-        expect(wrapper.props().maxHeight).toBe('140px');
-
-        // await wrapper.vm.$nextTick();
-        // console.log(wrapper.vm.isScroll);
-        // expect(wrapper.vm.isScroll).toBe(true);
+        expect(wrapper.props().maxHeight).toBe(100);
     })
 
     // 测试分页
@@ -121,15 +124,34 @@ describe('TableIndex', () => {
 
         const paginationName = wrapper.findComponent({ name: 'pageInation' })
         expect(paginationName.exists()).toBe(true)
+        await paginationName.vm.nextPage()
+        await paginationName.vm.prevPage()
+        await paginationName.vm.setPage(2)
+        // expect(wrapper.emitted('pageUp')).toBeTruthy()
     })
 
     // 测试筛选
     it('renders a search', async()=>{
         await wrapper.setProps({
-            search: [ 'six' ]
+            search: [ 'name' ]
         })
         const thead = wrapper.findComponent({ name: 'theadIndex' })
-        expect(thead.props().search[0]).toBe('six');
+        expect(thead.props().search[0]).toBe('name');
+        await thead.find('.thead-filter').trigger('click');
+        await thead.vm.searchClick()
+        await thead.vm.$emit('searchChange', {field: 'name', value: '张'});
+    })
+
+    // 测试排序
+    it('renders a sort', async()=>{
+        const thead = wrapper.findComponent({ name: 'theadIndex' });
+        thead.find('.thead-sort [data-name="top"]').trigger('click');
+    })
+
+    // 单击行
+    it('renders a click', async()=>{
+        const tbody = wrapper.findComponent({ name: 'tbodyIndex' });
+        tbody.findAll('.table-body-tbody_tr')[0].trigger('click');
     })
 
   })

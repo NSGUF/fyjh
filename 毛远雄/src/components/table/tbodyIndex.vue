@@ -86,7 +86,8 @@ export default defineComponent({
                 return state.checkboxValue
             },
             set(val: string[]) {
-                emit('setSelectValue', { type: 'selection', value: val})
+                console.log(val);
+                emit('setSelectValue', { type: 'selection', checkValue: val})
                 return (state.checkboxValue = val)
             }
         })
@@ -96,7 +97,7 @@ export default defineComponent({
                 return state.radioValue
             },
             set(val: string) {
-                emit('setSelectValue', { type: 'multiple', value: val})
+                emit('setSelectValue', { type: 'multiple', radioValue: val})
                 return (state.radioValue = val)
             }
         })

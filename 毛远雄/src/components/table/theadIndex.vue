@@ -100,7 +100,7 @@ export default defineComponent({
         })
 
         onMounted(()=>{
-            props.theadData.forEach((item: TheadDataType) => {
+            props.theadData?.forEach((item: TheadDataType) => {
                 item.sort && (state.theadSort[item.field] = 'top')
             })
             document.addEventListener('click',()=>{

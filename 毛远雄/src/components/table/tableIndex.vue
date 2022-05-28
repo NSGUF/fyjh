@@ -5,7 +5,8 @@
                cellspacing="0" 
                cellpadding="0">
             <!-- 表头 -->
-            <div class="thead-box" 
+            <div class="thead-box"
+                 ref="thead" 
                  :class="{'shift-right': isScroll}">
                 <thead-index v-bind="$attrs" 
                              :isCheckAll="isCheckAll" 
@@ -28,7 +29,8 @@
                                 ref="tbody" 
                                 :checkValue="checkValue"
                                 :tbodyList="tbodyList"
-                                @setSelectValue="setSelectValue">
+                                @setSelectValue="setSelectValue"
+                                @trClick="trClick">
                     <template v-for="(index, name) in $slots" 
                               v-slot:[name]="slotData">
                         <slot :name="name" 
@@ -81,9 +83,10 @@ export default defineComponent({
             default: () => []
         },
     },
-    emits: ['handlerTrClick', 'changePage', 'sortChange', 'getCheckboxValue'],
-    setup(props, { emit, expose, attrs }) {
+    emits: ['handlerTrClick', 'changePage', 'sortChange'],
+    setup(props, { emit, attrs }) {
         const tbody = ref<any>(null)
+        const thead = ref<any>(null)
         const state : StateTableIndexType = reactive({
             tbodyList: [],
             checkValue: [],
@@ -107,9 +110,8 @@ export default defineComponent({
         },{immediate: true})
 
         const setHeight = ()=>{
-            let theadEl = document.querySelector('.thead-box') as HTMLDivElement;
-            state.theadHeight = theadEl.offsetHeight;
-            let height = tbody.value.$el.offsetHeight;
+            let height = tbody?.value?.$el?.offsetHeight || 0;
+            state.theadHeight = parseFloat(thead?.value?.offsetHeight || 0);
             state.isScroll = height > props.maxHeight;
             let bodyHeight = props.maxHeight? props.maxHeight - state.theadHeight : 'auto';
             state.tbodyHeight = bodyHeight !== 'auto' && height<bodyHeight? height+1+'px' : bodyHeight+'px'
@@ -162,21 +164,19 @@ export default defineComponent({
            }
         }
 
-        expose({
-            getCheckboxValue
-        })
-
         return {
             ...toRefs(state),
             changeAll,
             tbody,
+            thead,
             trClick,
             handlerSort,
             pageUp,
             setSelectValue,
             setHeight,
             isCheckAll,
-            searchChange
+            searchChange,
+            getCheckboxValue
         }
     }
 })
