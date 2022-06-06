@@ -1,13 +1,52 @@
-import {  mount } from '@vue/test-utils'
-import Pagination from '@/components/Pagination.vue'
+import {
+    mount
+} from "@vue/test-utils";
 
-describe('HelloWorld.vue', () => {
-  it('开始运行我第一个单元测试', () => {
-    const wrapper = mount(Pagination)
+import TableColumn from '@/components/TableColumn.vue';
+import tableIndex from '@/view/tableIndex';
+import Pagination from '@/components/Pagination'
 
-    const todo = wrapper.get('[class="page-input"]').setValue('测试输入')
-    wrapper.get('[data-test="form"]').trigger('submit')
+describe('表格头组件', () => {
 
-    expect(todo.text()).toBe('上一页')
-  })
+    it('渲染表格头', ()=>{
+        const wrapper = mount(TableColumn, {
+            propsData: {
+                title: '张三',
+                width: 80,
+                showCheck: true,
+                sort: true
+            }
+        });
+        expect(wrapper.props().width).toBe(80);
+        expect(wrapper.props().title).toBe('张三');
+        expect(wrapper.props().sort).toBe(true);
+        expect(wrapper.props().showCheck).toBe(true);
+
+        wrapper.find('.table-sort').trigger('click')
+
+    })
+})
+
+
+describe('table组件使用', () => {
+    it('表格使用', () => {mount(tableIndex)})
+})
+
+
+describe('分页器组件', () => {
+    // 测试分页
+    it('renders a isPagination', ()=>{
+        const wrapper = mount(Pagination, {
+            propsData: {
+                pageNum: 2,
+                total: 100,
+                pageSize: 3,
+                continueNo: 5
+            }
+        })
+        expect(wrapper.props().total).toBe(100);
+        const paginationName = wrapper.findComponent({ name: 'JPagination' })
+        paginationName.vm.pageCompute(1)
+        paginationName.vm.inputPage()
+    })
 })

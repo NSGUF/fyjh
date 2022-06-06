@@ -1,6 +1,6 @@
 <template>
     <div class="pagination">
-        <button :disabled="pageNum === 1" @click="pageCompute(pageNum - 1)">
+        <button :disabled="pageNum === 1" @click="pageCompute(pageNum - 1)" class="preBtn">
             上一页
         </button>
         <button v-if="startEnd.start !== 1" @click="pageCompute(1)">1</button>
