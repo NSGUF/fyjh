@@ -14,11 +14,11 @@ export default defineComponent({
   props: {
     dataSource: {
       type: Array,
-      default: () => []
+      default: []
     },
     columns: {
       type: Array,
-      default: () => []
+      default: []
     }
   },
 
@@ -26,8 +26,8 @@ export default defineComponent({
     const curPage = ref(1);
     // TODO 每页显示数据量可选，目前写死每页显示十条
     const pageSize = ref(10);
-    const theSortDirections = ref<'ascend' | 'descend' | '' | string>('');
-    const sortedDataIndex = ref<string>('');
+    const theSortDirection = ref('');
+    const sortedDataIndex = ref('');
     const sortedDataSource = ref<{[key: string]: any}>([]);
 
     // 当前页码的数据
@@ -40,19 +40,18 @@ export default defineComponent({
 
     // 页码改变后的处理
     const handlePageChange = (cur: number) => {
-      console.log('当前页码：', cur)
       curPage.value = cur;
     };
 
-    const handleSort = (sortedData: {[key: string]: any}, dataIndex: string, sortDirections: string) => {
+    const handleSort = (sortedData: {[key: string]: any}, dataIndex: string, sortDirection: string) => {
       sortedDataSource.value = sortedData;
       sortedDataIndex.value = dataIndex;
-      theSortDirections.value = sortDirections;
+      theSortDirection.value = sortDirection;
     };
 
     return () => (
-      <div class="simple-table_table-box">
-        <table class="simple-table_table global-mg-b-10">
+      <div class="fy-table_table-box">
+        <table class="fy-table_table global-mg-b-10">
           <TableHead
             columns={props.columns}
             data-source={props.dataSource}
@@ -63,7 +62,7 @@ export default defineComponent({
             cur-page-data={curPageData.value}
             columns={props.columns}
             sorted-data-index={sortedDataIndex.value}
-            the-sort-directions={theSortDirections.value}
+            the-sort-direction={theSortDirection.value}
           />
         </table>
 
