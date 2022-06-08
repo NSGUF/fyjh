@@ -1,8 +1,9 @@
 <template>
-    <table class="table">
+    <table class="table" :style="{ height: options?.height + 'px' }">
         <!-- 表格头 -->
         <thead>
             <tr>
+                <input v-if="options.showCheck" type="checkbox" />
                 <slot></slot>
             </tr>
         </thead>
@@ -13,6 +14,9 @@
                 v-for="(item, index) in newData.data"
                 :key="'tableColumn' + index"
             >
+                <td v-if="options?.showCheck">
+                    <input type="checkbox" />
+                </td>
                 <td
                     v-for="(cellItem, cellIndex) in cellData"
                     :key="'tableCell' + cellIndex"
@@ -25,7 +29,9 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, watch, computed } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
+import { SortTypeEnum } from "@/type/index";
+import emitter from '@/eventBus'
 
 export default {
     name: "JTableContent",
@@ -33,12 +39,7 @@ export default {
     props: {
         options: {
             type: Object,
-        },
-
-        // 当前页
-        pageNum: {
-            type: Number,
-            default: 2,
+            default: ()=>{}
         },
 
         // 是否显示勾选列
@@ -56,7 +57,7 @@ export default {
         });
 
         // 0无序，1降序 2升序
-        const sort = ref(0);
+        const sort= ref(SortTypeEnum.disorder);
 
         // 勾选的数据列表
         const selectData = reactive([]);
@@ -66,6 +67,7 @@ export default {
         });
 
         onMounted(() => {
+            
             // 获取slot中的dataIndex
             slots.default().forEach((item) => {
                 if (item.props) {
@@ -77,7 +79,28 @@ export default {
             emit("selectChange", selectData);
 
             tableDataFn();
+
+            emitter.on('setSort', sortSet)
         });
+
+        // 进行排序
+        const sortSet = (value)=> {
+            value = value.value
+            if (value > SortTypeEnum.ascending) {
+                tableDataFn();
+                value = SortTypeEnum.disorder;
+                return;
+            }
+            newData.data.sort((a, b) => {
+                if (value === SortTypeEnum.descending) {
+                    return a.jAge - b.jAge;
+                }
+                if (value === SortTypeEnum.ascending) {
+                    return b.jAge - a.jAge;
+                }
+            });
+        };
+        
 
         // 进行分页
         const tableDataFn = () => {
@@ -99,14 +122,6 @@ export default {
         // 禁用所有行
         const disabledAllData = () => {};
 
-        const sortText = computed(() => {
-            return sort.value === 1
-                ? "年龄降序"
-                : sort.value === 2
-                ? "年龄无序"
-                : "年龄升序";
-        });
-
         return {
             cellData,
             newData,
@@ -116,7 +131,7 @@ export default {
             loadData,
             setCheckAll,
             disabledAllData,
-            sortText,
+            sortSet
         };
     },
 };
