@@ -1,0 +1,16 @@
+// Vitest Snapshot v1
+
+exports[`dataLength === 200 时，测试分页器，快进快退5页 1`] = `
+"<ul class=\\"pagination-box\\">
+  <li class=\\"pagination-prev\\"><button disabled=\\"\\">&lt;</button></li>
+  <!---->
+  <li class=\\"pagination-item pagination-item-active\\">1</li>
+  <li class=\\"pagination-item\\">2</li>
+  <li class=\\"pagination-item\\">3</li>
+  <li class=\\"pagination-item\\">4</li>
+  <li class=\\"pagination-item\\">5</li>
+  <li class=\\"pagination-jump-next\\" title=\\"往后5页\\">...</li>
+  <li class=\\"pagination-item\\">20</li>
+  <li class=\\"pagination-next\\"><button>&gt;</button></li>
+</ul>"
+`;
